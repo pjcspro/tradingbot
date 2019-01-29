@@ -25,7 +25,14 @@ module.exports = class Binance {
   async orders_open(symbol) {
     if (!exchange.has["fetchOpenOrders"]) return;
 
-    var result = await exchange.fetchOpenOrders((symbol = symbol));
+    var result = await exchange.fetchOpenOrders(symbol);
+    return result;
+  }
+
+  async orders(_symbol, _limit) {
+    if (!exchange.has["fetchOrders"]) return;
+
+    var result = await exchange.fetchOrders(_symbol, undefined, _limit);
     return result;
   }
 };

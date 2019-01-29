@@ -18,13 +18,13 @@ function runAlgorithm() {
   console.log("RUN");
 }
 
-async function printOpenOrders(symbol) {
-  var result = await binance.orders_open(symbol);
+async function printRecentOrders(symbol, limit) {
+  var result = await binance.orders(symbol, limit);
   console.log(result);
 }
 
 ///////// MANAGER /////////
-printOpenOrders("POWR/ETH");
+printRecentOrders("POWR/ETH", 2);
 
 /* constructor(cronTime, onTick, onComplete, start, timezone, context, runOnInit, unrefTimeout) */
 new cronJob(
