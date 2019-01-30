@@ -2,6 +2,8 @@ const Binance = require("./exchanges/binance.js");
 const asTable = require("as-table");
 const argv = require("yargs").argv;
 
+global.DEBUG = true;
+
 ///////// VARS /////////
 var binance = new Binance();
 

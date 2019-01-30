@@ -3,7 +3,7 @@ const Binance = require("./exchanges/binance.js");
 const argv = require("yargs").argv;
 const asTable = require("as-table");
 
-var DEBUG = true;
+global.DEBUG = true;
 
 /////// CONSTANTS /////////
 const CRONJOB = {
@@ -53,17 +53,19 @@ async function start() {
     ])
   );
 
-  var result = await binance.createOrderStopLimit(
-    config.symbol,
-    config.amount,
-    limit_price,
-    stop_price
-  );
+  if (!global.DEBUG) {
+    var result = await binance.createOrderStopLimit(
+      config.symbol,
+      config.amount,
+      limit_price,
+      stop_price
+    );
 
-  //TODO: handle errors
-  //TODO: add action to log file
-  sll_order_id = result.id;
-  //console.log(result, sll_order_id);
+    //TODO: handle errors
+    //TODO: add action to log file
+    sll_order_id = result.id;
+    //console.log(result, sll_order_id);
+  }
 
   /* constructor(cronTime, onTick, onComplete, start, timezone, context, runOnInit, unrefTimeout) */
   var cron = new cronJob(
@@ -81,14 +83,17 @@ async function runAlgorithm() {
   console.log("price", price.last);
 
   console.log("\n======== CANCELLING ORDER ======== ");
-  var result = await binance.cancelOrder(sll_order_id, config.symbol);
-  console.log(result);
+  if (!global.DEBUG) {
+    var result = await binance.cancelOrder(sll_order_id, config.symbol);
+    console.log(result);
 
-  //TODO: create new order with updated price
-  //TODO: Maybe only update if diff threshold
+    //TODO: create new order with updated price
+    //TODO: Maybe only update if diff threshold
+  }
 }
 
 start();
+
 //Example: node app.js --config=./testOrder1.json
 
 /**

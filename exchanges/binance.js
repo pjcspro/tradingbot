@@ -30,6 +30,9 @@ module.exports = class Binance {
   }
 
   async orders_open(symbol) {
+    if (global.DEBUG) {
+      return;
+    }
     if (!exchange.has["fetchOpenOrders"]) return;
 
     var result = await exchange.fetchOpenOrders(symbol);
@@ -37,6 +40,9 @@ module.exports = class Binance {
   }
 
   async orders(symbol, limit) {
+    if (global.DEBUG) {
+      return;
+    }
     if (!exchange.has["fetchOrders"]) return;
 
     var result = await exchange.fetchOrders(symbol, undefined, limit);
@@ -44,6 +50,9 @@ module.exports = class Binance {
   }
 
   async order(orderid, symbol) {
+    if (global.DEBUG) {
+      return;
+    }
     if (!exchange.has["fetchOrder"]) return;
 
     var result = await exchange.fetchOrder(orderid, symbol);
@@ -51,6 +60,9 @@ module.exports = class Binance {
   }
 
   async cancelOrder(orderid, symbol) {
+    if (global.DEBUG) {
+      return;
+    }
     if (!exchange.has["cancelOrder"]) return;
 
     var result = await exchange.cancelOrder(orderid, symbol);
@@ -58,6 +70,9 @@ module.exports = class Binance {
   }
 
   async createOrderStopLimit(symbol, amount, limit_price, stop_price) {
+    if (global.DEBUG) {
+      return;
+    }
     if (!exchange.has["createOrder"]) return;
 
     var result = await exchange.createOrder(
