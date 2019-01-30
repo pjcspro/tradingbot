@@ -1,6 +1,6 @@
 {
 	"symbol": "POWR/ETH",
-	"amount": "15",
-	"limit_price": "0.000701",
-	"stop_price": "0.000700" 
+	"amount": 15,
+	"trigger_distance": 0.00008342,
+	"limit_price_distance": 0.000001 
 }

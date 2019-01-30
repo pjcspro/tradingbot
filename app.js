@@ -3,6 +3,8 @@ const Binance = require("./exchanges/binance.js");
 const argv = require("yargs").argv;
 const asTable = require("as-table");
 
+var DEBUG = true;
+
 /////// CONSTANTS /////////
 const CRONJOB = {
   TIME: {
@@ -21,28 +23,53 @@ if (!argv.config) {
   return;
 }
 const config = require(argv.config);
-console.log(asTable([["order_id", "symbol"], [config.orderid, config.symbol]]));
+
+console.log("\n======== CONFIGS ======== ");
+console.log(
+  asTable([
+    ["symbol", "amount", "trigger_distance", "limit_price_distance"],
+    [
+      config.symbol,
+      config.amount,
+      config.trigger_distance,
+      config.limit_price_distance
+    ]
+  ])
+);
 
 ///////// METHODS /////////
 async function start() {
-  var result = await binance.stopLimit(
+  var price = await binance.price(config.symbol);
+  var price_last = price.last;
+
+  var stop_price = price_last - config.trigger_distance;
+  var limit_price = stop_price + config.limit_price_distance;
+
+  console.log("\n======== CREATING ORDER ======== ");
+  console.log(
+    asTable([
+      ["symbol", "amount", "limit_price", "stop_price"],
+      [config.symbol, config.amount, limit_price, stop_price]
+    ])
+  );
+
+  var result = await binance.createOrderStopLimit(
     config.symbol,
     config.amount,
-    config.limit_price,
-    config.stop_price
+    limit_price,
+    stop_price
   );
 
   //TODO: handle errors
   //TODO: add action to log file
   sll_order_id = result.id;
-  console.log(result, sll_order_id);
+  //console.log(result, sll_order_id);
 
   /* constructor(cronTime, onTick, onComplete, start, timezone, context, runOnInit, unrefTimeout) */
-  runAlgorithm();
   var cron = new cronJob(
     CRONJOB.TIME.EVERY_MINUTE,
     function() {
-      //runAlgorithm();
+      runAlgorithm();
     },
     null,
     true
@@ -53,7 +80,12 @@ async function runAlgorithm() {
   var price = await binance.price(config.symbol);
   console.log("price", price.last);
 
-  //TODO: If already exists??
+  console.log("\n======== CANCELLING ORDER ======== ");
+  var result = await binance.cancelOrder(sll_order_id, config.symbol);
+  console.log(result);
+
+  //TODO: create new order with updated price
+  //TODO: Maybe only update if diff threshold
 }
 
 start();

@@ -22,6 +22,13 @@ module.exports = class Binance {
     return result[symbol];
   }
 
+  async price(symbol) {
+    if (!exchange.has["fetchOrders"]) return;
+
+    var result = await exchange.fetchTicker(symbol);
+    return result;
+  }
+
   async orders_open(symbol) {
     if (!exchange.has["fetchOpenOrders"]) return;
 
@@ -43,14 +50,14 @@ module.exports = class Binance {
     return result;
   }
 
-  async price(symbol) {
-    if (!exchange.has["fetchOrders"]) return;
+  async cancelOrder(orderid, symbol) {
+    if (!exchange.has["cancelOrder"]) return;
 
-    var result = await exchange.fetchTicker(symbol);
+    var result = await exchange.cancelOrder(orderid, symbol);
     return result;
   }
 
-  async stopLimit(symbol, amount, limit_price, stop_price) {
+  async createOrderStopLimit(symbol, amount, limit_price, stop_price) {
     if (!exchange.has["createOrder"]) return;
 
     var result = await exchange.createOrder(
