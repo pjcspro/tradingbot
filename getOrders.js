@@ -8,7 +8,17 @@ var binance = new Binance();
 async function printRecentOrders(symbol, limit) {
   var results = await binance.orders(symbol, limit);
   var res = [
-    ["", "id", "date", "type", "side", "price", "amount", "cost", "status"]
+    [
+      "",
+      "order_id",
+      "date",
+      "type",
+      "side",
+      "price",
+      "amount",
+      "cost",
+      "status"
+    ]
   ];
   results.forEach(function(result) {
     res.push([
@@ -26,8 +36,8 @@ async function printRecentOrders(symbol, limit) {
   console.log(asTable(res));
 }
 
-if (!argv.pair) {
-  console.log("PAIR not set");
+if (!argv.symbol) {
+  console.log("symbol not set");
   return;
 }
 
@@ -36,4 +46,6 @@ if (argv.max) {
   maxOrders = parseInt(argv.max);
 }
 
-printRecentOrders(argv.pair, maxOrders);
+printRecentOrders(argv.symbol, maxOrders);
+
+//EXAMPLE: node getOrders.js --symbol=ETH/USDT --max=1
