@@ -1,0 +1,11 @@
+{
+  "symbol": "POWR/ETH",
+  "amount": 22,
+  "algorithm": "Sell with trailing",
+  "status": "pending",
+  "params": {
+    "min_sell_price": 0.00074477,
+    "trigger_distance": 0.00008342,
+    "limit_price_distance": 0.000001
+  }
+}
