@@ -9,12 +9,22 @@ if (!argv.config) {
 const config = require(argv.config);
 console.log(config);
 
-db.newOrder(config, function(err, data) {
-  if (err) {
-    console.log("Error: ", err);
-  } else {
-    console.log("Data:", data);
-  }
-});
+if (config._id) {
+  db.updateOrder(config._id, config, function(err, numUpdated) {
+    if (err) {
+      console.log("Error: ", err);
+    } else {
+      console.log("Updated ", numUpdated);
+    }
+  });
+} else {
+  db.newOrder(config, function(err, data) {
+    if (err) {
+      console.log("Error: ", err);
+    } else {
+      console.log("New Entry:", data);
+    }
+  });
+}
 
 //node run_newOrder.js --config ./data_placeholder.json
