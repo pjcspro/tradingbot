@@ -1,0 +1,11 @@
+{
+  "symbol": "POWR/ETH",
+  "amount": 22,
+  "algorithm": "Buy with trailing",
+  "status": "pending",
+  "params": {
+    "trigger_distance": 0.000003,
+    "limit_price_distance": 0.000001,
+    "max_buy_price": 0.00075
+  }
+}

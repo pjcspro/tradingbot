@@ -4,7 +4,7 @@ const argv = require("yargs").argv;
 const asTable = require("as-table");
 const Databases = require("./database.js");
 
-global.DEBUG = false;
+global.DEBUG = true;
 
 /////// CONSTANTS /////////
 const CRONJOB = {
@@ -57,12 +57,73 @@ async function run() {
       case ALGORITHMS.SELL_WITH_TRAILING:
         runAlgorithm_SELL_WITH_TRAILING(order);
         break;
+      case ALGORITHMS.BUY_WITH_TRAILING:
+        runAlgorithm_BUY_WITH_TRAILING(order);
+        break;
     }
   });
 }
 
+async function runAlgorithm_BUY_WITH_TRAILING(order) {
+  console.log("runAlgorithm_BUY_WITH_TRAILING", order);
+
+  //TODO: Maybe only update if diff threshold.. how to know this threshold
+  var price = await binance.price(order.symbol);
+  var price_last = price.last;
+
+  var buy_price = price_last + order.params.trigger_distance;
+  var limit_price = buy_price - order.params.limit_price_distance;
+
+  var current_buy_price = order.params.current_buy_price;
+  if (current_buy_price && price_last > current_buy_price) {
+    if (limit_price < order.params.max_buy_price) {
+      console.log("\n======== CREATING ORDER ======== ");
+      console.log(
+        asTable([
+          ["symbol", "amount", "limit_price"],
+          [order.symbol, order.amount, limit_price]
+        ])
+      );
+
+      if (!global.DEBUG) {
+        var result = await binance.createBuyLimit(
+          order.symbol,
+          order.amount,
+          limit_price
+        );
+
+        //TODO: handle errors
+        //TODO: add action to log file
+        console.log(result);
+
+        console.log("\n======== ORDER FINISHED ======== ");
+        order.status = STATUS.FINISHED;
+      }
+    } else {
+      console.log("Buy price is above max_buy_price");
+    }
+  } else if (!current_buy_price || buy_price < current_buy_price) {
+    //MOVE BUY PRICE BELLOW
+    order.params.current_buy_price = buy_price;
+  } else {
+    console.log(
+      "Nothing changed",
+      "price",
+      price_last,
+      "last buy price",
+      current_buy_price,
+      "new buy price",
+      buy_price
+    );
+  }
+
+  console.log("\n======== UPDATING LOCAL ORDER ======== ");
+  var result = await db.updateOrder_sync(order._id, order);
+  console.log(order);
+}
+
 async function runAlgorithm_SELL_WITH_TRAILING(order) {
-  console.log("runAlgorithm", order);
+  console.log("runAlgorithm_SELL_WITH_TRAILING", order);
 
   //TODO: Maybe only update if diff threshold.. how to know this threshold
   var price = await binance.price(order.symbol);

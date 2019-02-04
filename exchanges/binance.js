@@ -89,4 +89,20 @@ module.exports = class Binance {
     );
     return result;
   }
+
+  async createBuyLimit(symbol, amount, limit_price) {
+    if (global.DEBUG) {
+      return;
+    }
+    if (!exchange.has["createOrder"]) return;
+
+    var result = await exchange.createOrder(
+      symbol,
+      "limit",
+      "buy",
+      amount,
+      limit_price
+    );
+    return result;
+  }
 };

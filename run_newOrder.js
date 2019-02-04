@@ -7,7 +7,7 @@ if (!argv.config) {
   return;
 }
 const config = require(argv.config);
-console.log(config);
+//console.log(config);
 
 if (config._id) {
   db.updateOrder(config._id, config, function(err, numUpdated) {
