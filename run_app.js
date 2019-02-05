@@ -7,6 +7,9 @@ const Databases = require("./database.js");
 global.DEBUG = true;
 
 /////// CONSTANTS /////////
+
+const buyback_percentage = 5.0;
+
 const CRONJOB = {
   TIME: {
     EVERY_SECOND: "* * * * * *",
@@ -24,8 +27,11 @@ const STATUS = {
 
 const ALGORITHMS = {
   SELL_WITH_TRAILING: "Sell with trailing",
-  BUY_WITH_TRAILING: "Buy with trailing"
+  BUY_WITH_TRAILING: "Buy with trailing",
+  SELL_WITH_TRAILING_RE: "Sell with trailing Reinvest",
+  BUY_WITH_TRAILING_RE: "Buy with trailing Reinvest"
 };
+
 ///////// VARS /////////
 const db = new Databases();
 const binance = new Binance();
@@ -47,7 +53,7 @@ async function run() {
   var orders = await db.getOrders_sync();
   orders.forEach(order => {
     //status
-    if (STATUS.PAUSED == order.status) {
+    if (STATUS.PAUSED == order.status || STATUS.FINISHED == order.status) {
       console.log("Item _id=" + order._id + " is " + order.status);
     }
 
@@ -55,9 +61,11 @@ async function run() {
     console.log(order.algorithm);
     switch (order.algorithm) {
       case ALGORITHMS.SELL_WITH_TRAILING:
+      case ALGORITHMS.SELL_WITH_TRAILING_RE:
         runAlgorithm_SELL_WITH_TRAILING(order);
         break;
       case ALGORITHMS.BUY_WITH_TRAILING:
+      case ALGORITHMS.BUY_WITH_TRAILING_RE:
         runAlgorithm_BUY_WITH_TRAILING(order);
         break;
     }
@@ -196,6 +204,44 @@ async function runAlgorithm_SELL_WITH_TRAILING(order) {
           stop_price
       );
     }
+  }
+
+  console.log("\n======== UPDATING LOCAL ORDER ======== ");
+  var result = await db.updateOrder_sync(order._id, order);
+  console.log(order);
+
+  if (
+    order.status == STATUS.FINISHED &&
+    (order.algorithm == ALGORITHMS.BUY_WITH_TRAILING_RE ||
+      order.algorithm == ALGORITHMS.SELL_WITH_TRAILING_RE)
+  ) {
+    reinvest(order, price_last);
+  }
+}
+
+/**
+ * TODO: Progressive buying?
+ */
+async function reinvest(order, current_price) {
+  switch (order.algorithm) {
+    case ALGORITHMS.SELL_WITH_TRAILING_RE:
+      order.algorithm = ALGORITHMS.BUY_WITH_TRAILING_RE;
+      order.status = STATUS.PENDING;
+      order.params.trigger_distance =
+        current_price - current_price * (buyback_percentage / 100.0);
+      order.params.max_buy_price =
+        current_price - current_price * ((buyback_percentage - 1) / 100.0); //TODO: Better way to choose this
+      order.params.min_sell_price = undefined;
+      break;
+    case ALGORITHMS.BUY_WITH_TRAILING_RE:
+      order.algorithm = ALGORITHMS.SELL_WITH_TRAILING;
+      order.status = STATUS.PENDING;
+      order.params.trigger_distance =
+        current_price + current_price * (buyback_percentage / 100.0);
+      order.params.max_buy_price = undefined;
+      order.params.min_sell_price =
+        current_price + current_price * ((buyback_percentage - 1) / 100.0); //TODO: Better way to choose this
+      break;
   }
 
   console.log("\n======== UPDATING LOCAL ORDER ======== ");

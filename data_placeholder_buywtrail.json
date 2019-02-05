@@ -1,7 +1,7 @@
 {
   "symbol": "POWR/ETH",
   "amount": 22,
-  "algorithm": "Buy with trailing",
+  "algorithm": "Buy with trailing Reinvest",
   "status": "pending",
   "params": {
     "trigger_distance": 0.000003,
