@@ -3,6 +3,15 @@ const Binance = require("./exchanges/binance.js");
 const argv = require("yargs").argv;
 const asTable = require("as-table");
 const Databases = require("./database.js");
+const log = require("ololog").configure({
+  "render+"(text, { consoleMethod = "" }) {
+    if (!global.DEBUG) {
+      fs.appendFileSync("logs/script.log", "\n" + ansi.strip(text)); // strip ANSI styling codes from output
+    }
+    return text;
+  },
+  time: true
+});
 
 global.DEBUG = true;
 
@@ -38,9 +47,11 @@ const binance = new Binance();
 
 ///////// METHODS /////////
 async function startPeriodicRun() {
+  log("\nCALLED startPeriodicRun()");
+
   run();
   var cron = new cronJob(
-    CRONJOB.TIME.EVERY_MINUTE,
+    CRONJOB.TIME.EVERY_5_MINUTES,
     function() {
       run();
     },
@@ -50,30 +61,32 @@ async function startPeriodicRun() {
 }
 
 async function run() {
+  log("\nCALLED run()");
+
   var orders = await db.getOrders_sync();
   orders.forEach(order => {
     //status
     if (STATUS.PAUSED == order.status || STATUS.FINISHED == order.status) {
+      //FINISHED
       console.log("Item _id=" + order._id + " is " + order.status);
-    }
-
-    //Algorithms
-    console.log(order.algorithm);
-    switch (order.algorithm) {
-      case ALGORITHMS.SELL_WITH_TRAILING:
-      case ALGORITHMS.SELL_WITH_TRAILING_RE:
-        runAlgorithm_SELL_WITH_TRAILING(order);
-        break;
-      case ALGORITHMS.BUY_WITH_TRAILING:
-      case ALGORITHMS.BUY_WITH_TRAILING_RE:
-        runAlgorithm_BUY_WITH_TRAILING(order);
-        break;
+    } else {
+      //ONGOING
+      switch (order.algorithm) {
+        case ALGORITHMS.SELL_WITH_TRAILING:
+        case ALGORITHMS.SELL_WITH_TRAILING_RE:
+          runAlgorithm_SELL_WITH_TRAILING(order);
+          break;
+        case ALGORITHMS.BUY_WITH_TRAILING:
+        case ALGORITHMS.BUY_WITH_TRAILING_RE:
+          runAlgorithm_BUY_WITH_TRAILING(order);
+          break;
+      }
     }
   });
 }
 
 async function runAlgorithm_BUY_WITH_TRAILING(order) {
-  console.log("runAlgorithm_BUY_WITH_TRAILING", order);
+  log("\nCALLED runAlgorithm_BUY_WITH_TRAILING(*)", order);
 
   //TODO: Maybe only update if diff threshold.. how to know this threshold
   var price = await binance.price(order.symbol);
@@ -82,11 +95,18 @@ async function runAlgorithm_BUY_WITH_TRAILING(order) {
   var buy_price = price_last + order.params.trigger_distance;
   var limit_price = buy_price - order.params.limit_price_distance;
 
+  log(
+    asTable([
+      ["price_last", "buy_price", "limit_price"],
+      [price_last, buy_price, limit_price]
+    ])
+  );
+
   var current_buy_price = order.params.current_buy_price;
   if (current_buy_price && price_last > current_buy_price) {
     if (limit_price < order.params.max_buy_price) {
-      console.log("\n======== CREATING ORDER ======== ");
-      console.log(
+      log("\n======== CREATING ORDER ======== ");
+      log(
         asTable([
           ["symbol", "amount", "limit_price"],
           [order.symbol, order.amount, limit_price]
@@ -102,13 +122,13 @@ async function runAlgorithm_BUY_WITH_TRAILING(order) {
 
         //TODO: handle errors
         //TODO: add action to log file
-        console.log(result);
+        log(result);
 
-        console.log("\n======== ORDER FINISHED ======== ");
+        log("\n======== ORDER FINISHED ======== ");
         order.status = STATUS.FINISHED;
       }
     } else {
-      console.log("Buy price is above max_buy_price");
+      log("Warning: Buy price is above max_buy_price. Nothing done");
     }
   } else if (!current_buy_price || buy_price < current_buy_price) {
     //MOVE BUY PRICE BELLOW
@@ -125,13 +145,13 @@ async function runAlgorithm_BUY_WITH_TRAILING(order) {
     );
   }
 
-  console.log("\n======== UPDATING LOCAL ORDER ======== ");
+  log("\n======== UPDATING LOCAL ORDER ======== ");
   var result = await db.updateOrder_sync(order._id, order);
-  console.log(order);
+  log(order);
 }
 
 async function runAlgorithm_SELL_WITH_TRAILING(order) {
-  console.log("runAlgorithm_SELL_WITH_TRAILING", order);
+  log("\nCALLED runAlgorithm_SELL_WITH_TRAILING(*)", order);
 
   //TODO: Maybe only update if diff threshold.. how to know this threshold
   var price = await binance.price(order.symbol);
@@ -143,19 +163,30 @@ async function runAlgorithm_SELL_WITH_TRAILING(order) {
   var current_stop_price = order.params.current_stop_price;
   var exchange_stop_orderid = order.params.exchange_stop_orderid;
 
-  console.log(
-    "price",
-    price_last,
-    "old stop price",
-    current_stop_price,
-    "new stop price",
-    stop_price
+  log(
+    asTable([
+      [
+        "price_last",
+        "stop_price",
+        "limit_price",
+        "current_stop_price",
+        "exchange_stop_orderid"
+      ],
+      [
+        price_last,
+        stop_price,
+        limit_price,
+        current_stop_price,
+        exchange_stop_orderid
+      ]
+    ])
   );
+
   if (current_stop_price && price_last <= current_stop_price) {
     //CHECK IF ORDER STILL OPENED BY CALLING ENDPOINT?
     //TODO: This
 
-    console.log("\n======== ORDER FINISHED ======== ");
+    log("\n======== ORDER FINISHED ======== ");
     order.status = STATUS.FINISHED;
   } else if (!current_stop_price || stop_price > current_stop_price) {
     //TODO: + threshold?? how know threshold?
@@ -164,19 +195,19 @@ async function runAlgorithm_SELL_WITH_TRAILING(order) {
     order.params.current_stop_price = stop_price;
 
     if (exchange_stop_orderid) {
-      console.log("\n======== CANCELLING ORDER ======== ");
+      log("\n======== CANCELLING ORDER ======== ");
       if (!global.DEBUG) {
         var result = await binance.cancelOrder(
           exchange_stop_orderid,
           order.symbol
         );
-        console.log(result);
+        log(result);
       }
     }
 
     if (limit_price >= order.params.min_sell_price) {
-      console.log("\n======== CREATING ORDER ======== ");
-      console.log(
+      log("\n======== CREATING ORDER ======== ");
+      log(
         asTable([
           ["symbol", "amount", "limit_price", "stop_price"],
           [order.symbol, order.amount, limit_price, stop_price]
@@ -194,7 +225,7 @@ async function runAlgorithm_SELL_WITH_TRAILING(order) {
         //TODO: handle errors
         //TODO: add action to log file
         order.params.exchange_stop_orderid = result.id;
-        console.log(result);
+        log(result);
       }
     } else {
       console.log(
@@ -206,9 +237,9 @@ async function runAlgorithm_SELL_WITH_TRAILING(order) {
     }
   }
 
-  console.log("\n======== UPDATING LOCAL ORDER ======== ");
+  log("\n======== UPDATING LOCAL ORDER ======== ");
   var result = await db.updateOrder_sync(order._id, order);
-  console.log(order);
+  log(order);
 
   if (
     order.status == STATUS.FINISHED &&
@@ -223,6 +254,8 @@ async function runAlgorithm_SELL_WITH_TRAILING(order) {
  * TODO: Progressive buying?
  */
 async function reinvest(order, current_price) {
+  log("\nCALLED reinvest(*, " + current_price + ")", order);
+
   switch (order.algorithm) {
     case ALGORITHMS.SELL_WITH_TRAILING_RE:
       order.algorithm = ALGORITHMS.BUY_WITH_TRAILING_RE;
@@ -244,9 +277,9 @@ async function reinvest(order, current_price) {
       break;
   }
 
-  console.log("\n======== UPDATING LOCAL ORDER ======== ");
+  log("\n======== UPDATING LOCAL ORDER ======== ");
   var result = await db.updateOrder_sync(order._id, order);
-  console.log(order);
+  log(order);
 }
 
 startPeriodicRun();
