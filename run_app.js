@@ -3,17 +3,30 @@ const Binance = require("./exchanges/binance.js");
 const argv = require("yargs").argv;
 const asTable = require("as-table");
 const Databases = require("./database.js");
+const fs = require("fs");
+const ansi = require("ansicolor");
+
+global.DEBUG = true;
+
 const log = require("ololog").configure({
   "render+"(text, { consoleMethod = "" }) {
     if (!global.DEBUG) {
-      fs.appendFileSync("logs/script.log", "\n" + ansi.strip(text)); // strip ANSI styling codes from output
+      fs.appendFileSync("logs/script.log", "\n" + ansi.strip(text));
     }
     return text;
   },
   time: true
 });
 
-global.DEBUG = true;
+const log_order = require("ololog").configure({
+  "render+"(text, { consoleMethod = "" }) {
+    if (true || !global.DEBUG) {
+      fs.appendFileSync("logs/orders.log", "\n" + ansi.strip(text));
+    }
+    return text;
+  },
+  time: true
+});
 
 /////// CONSTANTS /////////
 
@@ -48,6 +61,7 @@ const binance = new Binance();
 ///////// METHODS /////////
 async function startPeriodicRun() {
   log("\nCALLED startPeriodicRun()");
+  log_order("START");
 
   run();
   var cron = new cronJob(
@@ -114,7 +128,7 @@ async function runAlgorithm_BUY_WITH_TRAILING(order) {
       );
 
       if (!global.DEBUG) {
-        var result = await binance.createBuyLimit(
+        var result = await binance.createOrderBuyLimit(
           order.symbol,
           order.amount,
           limit_price
@@ -122,6 +136,13 @@ async function runAlgorithm_BUY_WITH_TRAILING(order) {
 
         //TODO: handle errors
         //TODO: add action to log file
+
+        log_order(
+          asTable([
+            ["action", "symbol", "amount", "limit_price", "order_id"],
+            ["BUY LIMIT", order.symbol, order.amount, limit_price, result.id]
+          ])
+        );
         log(result);
 
         log("\n======== ORDER FINISHED ======== ");
@@ -196,6 +217,7 @@ async function runAlgorithm_SELL_WITH_TRAILING(order) {
 
     if (exchange_stop_orderid) {
       log("\n======== CANCELLING ORDER ======== ");
+
       if (!global.DEBUG) {
         var result = await binance.cancelOrder(
           exchange_stop_orderid,
@@ -203,6 +225,13 @@ async function runAlgorithm_SELL_WITH_TRAILING(order) {
         );
         log(result);
       }
+
+      log_order(
+        asTable([
+          ["action", "symbol", "order_id"],
+          ["CANCEL", order.symbol, exchange_stop_orderid]
+        ])
+      );
     }
 
     if (limit_price >= order.params.min_sell_price) {
@@ -225,6 +254,27 @@ async function runAlgorithm_SELL_WITH_TRAILING(order) {
         //TODO: handle errors
         //TODO: add action to log file
         order.params.exchange_stop_orderid = result.id;
+        log_order(
+          asTable([
+            [
+              "action",
+              "symbol",
+              "amount",
+              "limit_price",
+              "stop_price",
+              "order_id"
+            ],
+            [
+              "STOP LIMIT",
+              order.symbol,
+              order.amount,
+              limit_price,
+              stop_price,
+              result.id
+            ]
+          ])
+        );
+
         log(result);
       }
     } else {

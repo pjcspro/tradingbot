@@ -90,7 +90,7 @@ module.exports = class Binance {
     return result;
   }
 
-  async createBuyLimit(symbol, amount, limit_price) {
+  async createOrderBuyLimit(symbol, amount, limit_price) {
     if (global.DEBUG) {
       return;
     }
@@ -103,6 +103,13 @@ module.exports = class Binance {
       amount,
       limit_price
     );
+    return result;
+  }
+
+  async orderBook(_symbol, _limit) {
+    if (!exchange.has["fetchOrderBook"]) return;
+
+    var result = await exchange.fetchOrderBook(_symbol, _limit);
     return result;
   }
 };
