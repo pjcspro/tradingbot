@@ -29,6 +29,12 @@ module.exports = class Binance {
     return result;
   }
 
+  async prices(symbols) {
+    if (!exchange.has["fetchTickers"]) return;
+    var result = await exchange.fetchTickers(symbols);
+    return result;
+  }
+
   async orders_open(symbol) {
     if (global.DEBUG) {
       return;
