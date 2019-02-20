@@ -61,6 +61,6 @@ startPeriodicRun();
 function format(number) {
   return new Intl.NumberFormat("de-DE", {
     style: "currency",
-    currency: "EUR"
+    currency: "USD"
   }).format(number);
 }
