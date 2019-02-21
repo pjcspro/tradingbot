@@ -6,6 +6,7 @@
   "params": {
     "trigger_distance": 0.0031,
     "limit_price_distance": 0.00001,
-    "max_buy_price": 0.293
+    "max_buy_price": 0.293,
+    "buyback_percentage": 5
   }
 }

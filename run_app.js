@@ -6,7 +6,7 @@ const Databases = require("./database.js");
 const fs = require("fs");
 const ansi = require("ansicolor");
 
-global.DEBUG = false;
+global.DEBUG = true;
 
 const log = require("ololog").configure({
   "render+"(text, { consoleMethod = "" }) {
@@ -29,8 +29,6 @@ const log_order = require("ololog").configure({
 });
 
 /////// CONSTANTS /////////
-
-const buyback_percentage = 5.0;
 
 const CRONJOB = {
   TIME: {
@@ -311,19 +309,21 @@ async function reinvest(order, current_price) {
       order.algorithm = ALGORITHMS.BUY_WITH_TRAILING_RE;
       order.status = STATUS.PENDING;
       order.params.trigger_distance =
-        current_price - current_price * (buyback_percentage / 100.0);
+        current_price - current_price * (order.buyback_percentage / 100.0);
       order.params.max_buy_price =
-        current_price - current_price * ((buyback_percentage - 1) / 100.0); //TODO: Better way to choose this
+        current_price -
+        current_price * ((order.buyback_percentage - 1) / 100.0); //TODO: Better way to choose this
       order.params.min_sell_price = undefined;
       break;
     case ALGORITHMS.BUY_WITH_TRAILING_RE:
       order.algorithm = ALGORITHMS.SELL_WITH_TRAILING;
       order.status = STATUS.PENDING;
       order.params.trigger_distance =
-        current_price + current_price * (buyback_percentage / 100.0);
+        current_price + current_price * (order.buyback_percentage / 100.0);
       order.params.max_buy_price = undefined;
       order.params.min_sell_price =
-        current_price + current_price * ((buyback_percentage - 1) / 100.0); //TODO: Better way to choose this
+        current_price +
+        current_price * ((order.buyback_percentage - 1) / 100.0); //TODO: Better way to choose this
       break;
   }
 
