@@ -6,7 +6,7 @@ const Databases = require("./database.js");
 const fs = require("fs");
 const ansi = require("ansicolor");
 
-global.DEBUG = true;
+global.DEBUG = false;
 
 const log = require("ololog").configure({
   "render+"(text, { consoleMethod = "" }) {

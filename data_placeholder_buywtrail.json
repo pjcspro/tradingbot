@@ -1,11 +1,11 @@
 {
-  "symbol": "POWR/ETH",
-  "amount": 22,
+  "symbol": "XRP/TUSD",
+  "amount": 173,
   "algorithm": "Buy with trailing Reinvest",
   "status": "pending",
   "params": {
-    "trigger_distance": 0.000003,
-    "limit_price_distance": 0.000001,
-    "max_buy_price": 0.00075
+    "trigger_distance": 0.0031,
+    "limit_price_distance": 0.00001,
+    "max_buy_price": 0.293
   }
 }
