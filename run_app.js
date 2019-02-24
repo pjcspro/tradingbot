@@ -20,7 +20,7 @@ const log = require("ololog").configure({
 
 const log_order = require("ololog").configure({
   "render+"(text, { consoleMethod = "" }) {
-    if (true || !global.DEBUG) {
+    if (!global.DEBUG) {
       fs.appendFileSync("logs/orders.log", "\n" + ansi.strip(text));
     }
     return text;
@@ -59,7 +59,7 @@ const binance = new Binance();
 ///////// METHODS /////////
 async function startPeriodicRun() {
   log("\nCALLED startPeriodicRun()");
-  log_order("START");
+  log_order("START " + (global.DEBUG ? "IN DEBUG" : "IN PRODUCTION"));
 
   run();
   var cron = new cronJob(
