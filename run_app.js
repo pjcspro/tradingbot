@@ -105,17 +105,12 @@ async function runAlgorithm_BUY_WITH_TRAILING(order) {
   var price_last = price.last;
 
   var buy_price = price_last + order.params.trigger_distance;
-  var limit_price = buy_price - order.params.limit_price_distance;
 
-  log(
-    asTable([
-      ["price_last", "buy_price", "limit_price"],
-      [price_last, buy_price, limit_price]
-    ])
-  );
+  log(asTable([["price_last", "buy_price"], [price_last, buy_price]]));
 
   var current_buy_price = order.params.current_buy_price;
   if (current_buy_price && price_last > current_buy_price) {
+    var limit_price = price_last - order.params.limit_price_distance;
     if (limit_price < order.params.max_buy_price) {
       log("\n======== CREATING ORDER ======== ");
       log(
