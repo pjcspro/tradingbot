@@ -1,12 +1,13 @@
 {
-  "symbol": "XRP/TUSD",
-  "amount": 173,
+  "symbol": "LTC/TUSD",
+  "exchange": "kucoin",
+  "amount": 1,
   "algorithm": "Buy with trailing Reinvest",
   "status": "pending",
   "params": {
-    "trigger_distance": 0.0031,
+    "trigger_distance": 2,
     "limit_price_distance": 0.00001,
-    "max_buy_price": 0.293,
-    "buyback_percentage": 5
+    "max_buy_price": 30,
+    "buyback_percentage": 15
   }
 }

@@ -1,7 +1,7 @@
 const ccxt = require("ccxt");
-const settings = require("./settings.json").binance;
+const settings = require("./settings.json").kucoin;
 
-const exchangeId = "binance",
+const exchangeId = "kucoin2",
   exchangeClass = ccxt[exchangeId],
   exchange = new exchangeClass({
     apiKey: settings.apiKey,
@@ -10,7 +10,7 @@ const exchangeId = "binance",
     enableRateLimit: true
   });
 
-module.exports = class Binance {
+module.exports = class Kucoin {
   constructor() {}
 
   /*    
@@ -24,7 +24,6 @@ module.exports = class Binance {
 
   async price(symbol) {
     if (!exchange.has["fetchTicker"]) return;
-
     var result = await exchange.fetchTicker(symbol);
     return result;
   }
@@ -88,8 +87,7 @@ module.exports = class Binance {
       amount,
       limit_price,
       {
-        type: "STOP_LOSS_LIMIT",
-        timeInForce: "GTC",
+        stop: "loss", //Other option: entry
         stopPrice: stop_price
       }
     );

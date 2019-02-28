@@ -1,11 +1,12 @@
 {
-  "symbol": "POWR/ETH",
-  "amount": 22,
+  "symbol": "LTC/USDT",
+  "exchange": "kucoin",
+  "amount": 1,
   "algorithm": "Sell with trailing",
   "status": "pending",
   "params": {
-    "min_sell_price": 0.00074477,
-    "trigger_distance": 0.00008342,
-    "limit_price_distance": 0.000001
+    "min_sell_price": 60,
+    "trigger_distance": 2,
+    "limit_price_distance": 0.01
   }
 }

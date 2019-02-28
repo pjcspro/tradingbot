@@ -1,5 +1,6 @@
 const cronJob = require("cron").CronJob;
 const Binance = require("./exchanges/binance.js");
+const Kucoin = require("./exchanges/kucoin.js");
 const argv = require("yargs").argv;
 const asTable = require("as-table");
 const Databases = require("./database.js");
@@ -55,6 +56,7 @@ const ALGORITHMS = {
 ///////// VARS /////////
 const db = new Databases();
 const binance = new Binance();
+const kucoin = new Kucoin();
 
 ///////// METHODS /////////
 async function startPeriodicRun() {
@@ -101,7 +103,7 @@ async function runAlgorithm_BUY_WITH_TRAILING(order) {
   log("\nCALLED runAlgorithm_BUY_WITH_TRAILING(*)", order);
 
   //TODO: Maybe only update if diff threshold.. how to know this threshold
-  var price = await binance.price(order.symbol);
+  var price = await exchangeFor(order).price(order.symbol);
   var price_last = price.last;
 
   var buy_price = price_last + order.params.trigger_distance;
@@ -121,7 +123,7 @@ async function runAlgorithm_BUY_WITH_TRAILING(order) {
       );
 
       if (!global.DEBUG) {
-        var result = await binance.createOrderBuyLimit(
+        var result = await exchangeFor(order).createOrderBuyLimit(
           order.symbol,
           order.amount,
           limit_price
@@ -168,7 +170,7 @@ async function runAlgorithm_SELL_WITH_TRAILING(order) {
   log("\nCALLED runAlgorithm_SELL_WITH_TRAILING(*)", order);
 
   //TODO: Maybe only update if diff threshold.. how to know this threshold
-  var price = await binance.price(order.symbol);
+  var price = await exchangeFor(order).price(order.symbol);
   var price_last = price.last;
 
   var stop_price = price_last - order.params.trigger_distance;
@@ -212,7 +214,7 @@ async function runAlgorithm_SELL_WITH_TRAILING(order) {
       log("\n======== CANCELLING ORDER ======== ");
 
       if (!global.DEBUG) {
-        var result = await binance.cancelOrder(
+        var result = await exchangeFor(order).cancelOrder(
           exchange_stop_orderid,
           order.symbol
         );
@@ -237,7 +239,7 @@ async function runAlgorithm_SELL_WITH_TRAILING(order) {
       );
 
       if (!global.DEBUG) {
-        var result = await binance.createOrderStopLimit(
+        var result = await exchangeFor(order).createOrderStopLimit(
           order.symbol,
           order.amount,
           limit_price,
@@ -325,6 +327,17 @@ async function reinvest(order, current_price) {
   log("\n======== UPDATING LOCAL ORDER ======== ");
   var result = await db.updateOrder_sync(order._id, order);
   log(order);
+}
+
+function exchangeFor(order) {
+  if (order.exchange) {
+    switch (order.exchange) {
+      case "kucoin":
+        return kucoin;
+    }
+  }
+
+  return binance;
 }
 
 startPeriodicRun();
