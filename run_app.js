@@ -100,7 +100,7 @@ async function run() {
 }
 
 async function runAlgorithm_BUY_WITH_TRAILING(order) {
-  log("\nCALLED runAlgorithm_BUY_WITH_TRAILING(*)", order);
+  //log("\nCALLED runAlgorithm_BUY_WITH_TRAILING(*)", order);
 
   //TODO: Maybe only update if diff threshold.. how to know this threshold
   var price = await exchangeFor(order).price(order.symbol);
@@ -164,6 +164,14 @@ async function runAlgorithm_BUY_WITH_TRAILING(order) {
   log("\n======== UPDATING LOCAL ORDER ======== ");
   var result = await db.updateOrder_sync(order._id, order);
   log(order);
+
+  if (
+    order.status == STATUS.FINISHED &&
+    (order.algorithm == ALGORITHMS.BUY_WITH_TRAILING_RE ||
+      order.algorithm == ALGORITHMS.SELL_WITH_TRAILING_RE)
+  ) {
+    reinvest(order, price_last);
+  }
 }
 
 async function runAlgorithm_SELL_WITH_TRAILING(order) {
@@ -305,22 +313,18 @@ async function reinvest(order, current_price) {
     case ALGORITHMS.SELL_WITH_TRAILING_RE:
       order.algorithm = ALGORITHMS.BUY_WITH_TRAILING_RE;
       order.status = STATUS.PENDING;
-      order.params.trigger_distance =
-        current_price - current_price * (order.buyback_percentage / 100.0);
+      //order.params.trigger_distance = current_price - current_price * (order.buyback_percentage / 100.0);
       order.params.max_buy_price =
-        current_price -
-        current_price * ((order.buyback_percentage - 1) / 100.0); //TODO: Better way to choose this
+        current_price - current_price * (order.buyback_percentage / 100.0); //TODO: Better way to choose this
       order.params.min_sell_price = undefined;
       break;
     case ALGORITHMS.BUY_WITH_TRAILING_RE:
       order.algorithm = ALGORITHMS.SELL_WITH_TRAILING;
       order.status = STATUS.PENDING;
-      order.params.trigger_distance =
-        current_price + current_price * (order.buyback_percentage / 100.0);
+      //order.params.trigger_distance = current_price + current_price * (order.buyback_percentage / 100.0);
       order.params.max_buy_price = undefined;
       order.params.min_sell_price =
-        current_price +
-        current_price * ((order.buyback_percentage - 1) / 100.0); //TODO: Better way to choose this
+        current_price + current_price * (order.buyback_percentage / 100.0); //TODO: Better way to choose this
       break;
   }
 
