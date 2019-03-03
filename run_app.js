@@ -216,8 +216,6 @@ async function runAlgorithm_SELL_WITH_TRAILING(order) {
     //TODO: + threshold?? how know threshold?
     //MOVE STOP LOSS ABOVE
 
-    order.params.current_stop_price = stop_price;
-
     if (exchange_stop_orderid) {
       log("\n======== CANCELLING ORDER ======== ");
 
@@ -238,6 +236,8 @@ async function runAlgorithm_SELL_WITH_TRAILING(order) {
     }
 
     if (limit_price >= order.params.min_sell_price) {
+      order.params.current_stop_price = stop_price;
+
       log("\n======== CREATING ORDER ======== ");
       log(
         asTable([
@@ -313,18 +313,22 @@ async function reinvest(order, current_price) {
     case ALGORITHMS.SELL_WITH_TRAILING_RE:
       order.algorithm = ALGORITHMS.BUY_WITH_TRAILING_RE;
       order.status = STATUS.PENDING;
-      //order.params.trigger_distance = current_price - current_price * (order.buyback_percentage / 100.0);
+      //order.params.trigger_distance = current_price - current_price * (order.params.buyback_percentage / 100.0);
       order.params.max_buy_price =
-        current_price - current_price * (order.buyback_percentage / 100.0); //TODO: Better way to choose this
-      order.params.min_sell_price = undefined;
+        current_price -
+        current_price * (order.params.buyback_percentage / 100.0); //TODO: Better way to choose this
+      delete order.params.min_sell_price;
+      delete order.params.current_stop_price;
       break;
     case ALGORITHMS.BUY_WITH_TRAILING_RE:
       order.algorithm = ALGORITHMS.SELL_WITH_TRAILING;
       order.status = STATUS.PENDING;
-      //order.params.trigger_distance = current_price + current_price * (order.buyback_percentage / 100.0);
-      order.params.max_buy_price = undefined;
+      //order.params.trigger_distance = current_price + current_price * (order.params.buyback_percentage / 100.0);
+      delete order.params.max_buy_price;
+      delete order.params.current_stop_price;
       order.params.min_sell_price =
-        current_price + current_price * (order.buyback_percentage / 100.0); //TODO: Better way to choose this
+        current_price +
+        current_price * (order.params.buyback_percentage / 100.0); //TODO: Better way to choose this
       break;
   }
 
