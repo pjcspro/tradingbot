@@ -4,10 +4,13 @@ const db = new Databases();
 
 if (!argv.config) {
   console.log("Configuration file not set");
+  db.getOrders(function(err, result) {
+    console.log(err, result);
+  });
+
   return;
 }
 const config = require(argv.config);
-//console.log(config);
 
 if (config._id) {
   db.updateOrder(config._id, config, function(err, numUpdated) {
