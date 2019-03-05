@@ -317,6 +317,14 @@ async function reinvest(order, current_price) {
       order.params.max_buy_price =
         current_price -
         current_price * (order.params.buyback_percentage / 100.0); //TODO: Better way to choose this
+      log(
+        "Reinvesting with values: current_price=" +
+          current_price +
+          " buy back=" +
+          order.params.buyback_percentage +
+          "result=" +
+          order.params.max_buy_price
+      );
       delete order.params.min_sell_price;
       delete order.params.current_stop_price;
       break;
@@ -329,12 +337,20 @@ async function reinvest(order, current_price) {
       order.params.min_sell_price =
         current_price +
         current_price * (order.params.buyback_percentage / 100.0); //TODO: Better way to choose this
+      log(
+        "Reinvesting with values: current_price=" +
+          current_price +
+          " buy back=" +
+          order.params.buyback_percentage +
+          "result=" +
+          order.params.min_sell_price
+      );
       break;
   }
 
   log("\n======== UPDATING LOCAL ORDER ======== ");
   var result = await db.updateOrder_sync(order._id, order);
-  log(order);
+  log(result);
 }
 
 function exchangeFor(order) {
