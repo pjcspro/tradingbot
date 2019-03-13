@@ -129,9 +129,20 @@ async function runAlgorithm_BUY_WITH_TRAILING(order) {
           limit_price
         );
 
+        if (!order.actions) {
+          order.actions = [];
+        }
+
+        order.actions.push({
+          action: "BUY LIMIT",
+          symbol: order.symbol,
+          amount: order.amount,
+          limit_price: limit_price,
+          order_id: result.id
+        });
+
         //TODO: handle errors
         //TODO: add action to log file
-
         log_order(
           asTable([
             ["action", "symbol", "amount", "limit_price", "order_id"],
@@ -226,6 +237,14 @@ async function runAlgorithm_SELL_WITH_TRAILING(order) {
           order.symbol
         );
         log(result);
+
+        if (
+          order.actions &&
+          order.actions.length > 0 &&
+          order.actions[order.actions.length - 1] == exchange_stop_orderid
+        ) {
+          order.actions.pop();
+        }
       }
 
       log_order(
@@ -254,6 +273,19 @@ async function runAlgorithm_SELL_WITH_TRAILING(order) {
           limit_price,
           stop_price
         );
+
+        if (!order.actions) {
+          order.actions = [];
+        }
+
+        order.actions.push({
+          action: "STOP LIMIT",
+          symbol: order.symbol,
+          amount: order.amount,
+          limit_price: limit_price,
+          stop_price: stop_price,
+          order_id: result.id
+        });
 
         //TODO: handle errors
         //TODO: add action to log file
