@@ -181,7 +181,7 @@ async function runAlgorithm_BUY_WITH_TRAILING(order) {
     (order.algorithm == ALGORITHMS.BUY_WITH_TRAILING_RE ||
       order.algorithm == ALGORITHMS.SELL_WITH_TRAILING_RE)
   ) {
-    reinvest(order, price_last);
+    reinvest(order, price_last - order.params.limit_price_distance);
   }
 }
 
@@ -331,7 +331,7 @@ async function runAlgorithm_SELL_WITH_TRAILING(order) {
     (order.algorithm == ALGORITHMS.BUY_WITH_TRAILING_RE ||
       order.algorithm == ALGORITHMS.SELL_WITH_TRAILING_RE)
   ) {
-    reinvest(order, price_last);
+    reinvest(order, price_last + order.params.limit_price_distance);
   }
 }
 
@@ -361,7 +361,7 @@ async function reinvest(order, current_price) {
       delete order.params.current_stop_price;
       break;
     case ALGORITHMS.BUY_WITH_TRAILING_RE:
-      order.algorithm = ALGORITHMS.SELL_WITH_TRAILING;
+      order.algorithm = ALGORITHMS.SELL_WITH_TRAILING_RE;
       order.status = STATUS.PENDING;
       //order.params.trigger_distance = current_price + current_price * (order.params.buyback_percentage / 100.0);
       delete order.params.max_buy_price;
