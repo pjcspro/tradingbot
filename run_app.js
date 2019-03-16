@@ -65,7 +65,7 @@ async function startPeriodicRun() {
 
   run();
   var cron = new cronJob(
-    CRONJOB.TIME.EVERY_5_MINUTES,
+    CRONJOB.TIME.EVERY_MINUTE,
     function() {
       run();
     },
@@ -150,10 +150,11 @@ async function runAlgorithm_BUY_WITH_TRAILING(order) {
           ])
         );
         log(result);
-      }
 
-      log("\n======== ORDER FINISHED ======== ");
-      order.status = STATUS.FINISHED;
+        //log("\n======== ORDER FINISHED ======== ");
+        //order.status = STATUS.FINISHED;
+      }
+	order.status = STATUS.FINISHED;
     } else {
       log("Warning: Buy price is above max_buy_price. Nothing done");
     }
