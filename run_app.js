@@ -154,7 +154,7 @@ async function runAlgorithm_BUY_WITH_TRAILING(order) {
         //log("\n======== ORDER FINISHED ======== ");
         //order.status = STATUS.FINISHED;
       }
-	order.status = STATUS.FINISHED;
+      order.status = STATUS.FINISHED;
     } else {
       log("Warning: Buy price is above max_buy_price. Nothing done");
     }
@@ -360,6 +360,7 @@ async function reinvest(order, current_price) {
       );
       delete order.params.min_sell_price;
       delete order.params.current_stop_price;
+      delete order.params.exchange_stop_orderid;
       break;
     case ALGORITHMS.BUY_WITH_TRAILING_RE:
       order.algorithm = ALGORITHMS.SELL_WITH_TRAILING_RE;
@@ -367,6 +368,7 @@ async function reinvest(order, current_price) {
       //order.params.trigger_distance = current_price + current_price * (order.params.buyback_percentage / 100.0);
       delete order.params.max_buy_price;
       delete order.params.current_stop_price;
+      delete order.params.exchange_stop_orderid;
       order.params.min_sell_price =
         current_price +
         current_price * (order.params.buyback_percentage / 100.0); //TODO: Better way to choose this
