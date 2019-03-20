@@ -6,6 +6,7 @@ const exchangeId = "kucoin2",
   exchange = new exchangeClass({
     apiKey: settings.apiKey,
     secret: settings.secret,
+    password: settings.password,
     timeout: 30000,
     enableRateLimit: true
   });
