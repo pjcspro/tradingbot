@@ -79,6 +79,9 @@ async function run() {
 
   var orders = await db.getOrders_sync();
   orders.forEach(order => {
+    if (order.exchange == "kucoin") {
+      return;
+    }
     //status
     if (STATUS.PAUSED == order.status || STATUS.FINISHED == order.status) {
       //FINISHED
