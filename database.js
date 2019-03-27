@@ -27,6 +27,10 @@ module.exports = class Databases {
     db.orders.remove({}, { multi: true }, _callback);
   }
 
+  delete(objid, _callback) {
+    db.orders.remove({ _id: objid }, { multi: false }, _callback);
+  }
+
   //ORDERS | AWAIT
   async getOrders_sync() {
     return await util.promisify(this.getOrders)();
